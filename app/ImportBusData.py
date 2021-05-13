@@ -74,7 +74,7 @@ def FilterData(data,date,debug=""):
 
 	return dataOk
 
-def GatherBusData(desiredDate,CONFIGS,log,busSelection=None,processedStatus=None):
+def GatherBusData(desiredDate,CONFIGS,log,busSelection=None):
 	"""
 def GatherBusData(desiredDate,Configs,busSelection=None)
 Arguments:
@@ -90,7 +90,7 @@ Returns:
 	#	return "Date does not match iso standard YYYY-MM-DD", None
 
 	if type(desiredDate) is datetime.datetime or type(desiredDate) is datetime.date:
-		desiredDate = desiredDate.strftime()
+		desiredDate = desiredDate.isoformat()
 	
 
 	# Formatando os dados da configs para uso na funcao
@@ -109,10 +109,6 @@ Returns:
 			processedFile = False
 	else:
 		processedFile = True
-
-	# Passa por referencia essa informacao caso seja preciso recupera-la
-	if type(processedStatus) is list:
-		processedStatus[0] =  processedFile
 	
 	# Importando os dados para o codigo
 	if processedFile:
@@ -129,13 +125,7 @@ Returns:
 		#	return error, None
 
 	
-	# Filtra os dados baseado em selecao de onibus
-	if busSelection:
-		busData = busDataRaw.loc[busDataRaw["id"].isin(busSelection),:]
-	else:
-		busData = busDataRaw
-	
-	return None, busData
+	return processedFile, busDataRaw
 
 def ProcessRawData(filename,desiredDate):
 	limitEntries = False

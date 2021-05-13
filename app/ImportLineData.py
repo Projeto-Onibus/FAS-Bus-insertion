@@ -105,7 +105,6 @@ def GetLineDataFromAPI(CONFIGS,log):
 			currentRow = 0
 			
 			for busLinePath in request["features"]:
-				print(busLinePath['attributes']['Id_Rota'])
 				infoCount += 1
 				result = {}
 				result["line"] = busLinePath["attributes"]["Id_Rota"]
