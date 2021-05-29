@@ -22,19 +22,30 @@ import ImportLineData
 
 def mainBus(args,database,CONFIGS,log):
     desiredDate = args.date
+    nextDate = desiredDate + datetime.timedelta(days=1)
     log.info(f"Selected mode: bus")
     log.info(f"Inserting data from {desiredDate}")
     log.info(f"Gathering from file")
 
     _, busTable = ImportBusData.GatherBusData(desiredDate,CONFIGS,logging)
     
+    # New partition creation
+    with database.cursor() as cursor:
+        cursor.execute(f"""
+            CREATE TABLE IF NOT EXISTS 
+                bus_data_{desiredDate.year}_{desiredDate.month}_{desiredDate.day} 
+            PARTITION OF bus_data 
+            FOR VALUES FROM ('{desiredDate.isoformat()}') TO ('{nextDate.isoformat()}')""")
+        cursor.commit()
+
+
     log.info("Converting to CSV")
     with io.StringIO() as buffer:
         buffer.write(busTable[['time','id','lat','lon','line']].to_csv(na_rep='\\N',index=False,header=False,line_terminator=",\n"))
         buffer.seek(0)
         log.info("Sending to database")
         with database.cursor() as cursor:
-            cursor.copy_from(buffer,'bus_insertion',sep=',')
+            cursor.copy_from(buffer,'bus_data',sep=',')
             cursor.execute("SELECT COUNT(*) FROM bus_data")
             results = cursor.fetchall()
             log.debug(f"written {results[0][0]} new entries")
