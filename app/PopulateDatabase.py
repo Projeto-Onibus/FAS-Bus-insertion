@@ -129,31 +129,49 @@ if __name__ == "__main__":
 
     # add ch to logger
     logger.addHandler(ch)
-    
-    # Defining configs
+     
+    # --------------------------------
+    # Configuration parameters gathering
+    # --------------------------------
+
+    # Config object creation
     CONFIGS = ConfigParser()
+    
+    # As a container, set default paths
     CONFIGS.add_section('paths')
     CONFIGS['paths']['importBusPath'] = '/collect_bus_old/' if args.bus is None else args.bus
     CONFIGS['paths']['importLinePath'] = '/collect_line/' if args.line is None else args.line
+
+    # Collects compatible variables from environment
+    CONFIGS.add_section('database')
+    CONFIGS['database']['user'] = os.getenv("DATABASE_USERNAME")
+    CONFIGS['database']['password'] = os.getenv("DATABASE_PASSWORD")
+    CONFIGS['database']['database'] = os.getenv("DATABASE_NAME")
+    CONFIGS['database']['host'] = os.getenv("DATABASE_HOST")
+
+    # Read configs from main_configurations
     logger.debug(f"Reading configs from {args.config}")
     CONFIGS.read(args.config)
+
+    # If database credentials set on another file, overwrites previously found credentials
     if DatabaseCredentialsFile:
         logger.debug(f"Reading database credentials from {DatabaseCredentialsFile}")
         CONFIGS.read(DatabaseCredentialsFile)
     
     # --------------------------------------------------------------------
-    # Data insertion type selection
+    # Database connection
     # --------------------------------------------------------------------
-    logger.debug(f"""Parameters: mode '{args.mode}'/ verbose: '{args.verbose}'/ config '{args.config}' / date '{args.date}' """)
-    logger.debug("Database connection attempt")
-    logger.debug(f"database credentials:")
-    logger.debug(f"\tusername: '{CONFIGS['database']['user']}'")
-    logger.debug(f"\tpassword: 'nice try'")
-    logger.debug(f"\tusername: '{CONFIGS['database']['host']}'")
-    logger.debug(f"\tusername: '{CONFIGS['database']['database']}'")
+    logger.info(f"Database connection attempt at '{CONFIGS['database']['database']}':")
+    logger.info(f"\tLogin attempt: '{CONFIGS['database']['user']}'@'{CONFIGS['database']['host']}'")
+    logger.info(f"\t{"password set" if CONFIGS.has_option("database","password") else "password NOT set"}")
     
     # Establishing database connection
     database = db.connect(**CONFIGS['database'])
+
+    logger.info("Connection successful.")
+    logger.info(f"Selected mode: {args.mode}")
+
+    logger.debug(f"""Other params: verbose = '{args.verbose}'/ config = '{args.config}' / date = '{args.date}' """)
 
     if args.mode == "bus" and args.date is None:
         logger.critical("Date not specified for bus mode. Can't proceed to save file. Exiting...")

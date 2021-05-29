@@ -1,3 +1,9 @@
+#
+# FAS-Bus's insertion module of Rio de Janeiro's fleet.
+# Part of project FAS-Bus
+# More details at README.md
+# 
+
 FROM python:3.8-buster
 
 # programs to 
@@ -10,7 +16,7 @@ RUN python3 -m pip install psycopg2 pandas numpy requests
 RUN mkdir /collect_bus && mkdir /collect_bus_old && mkdir /collect_line && touch /cron.log && touch /collect_bus_old/collection_logs.csv
 
 # Copy hello-cron file to the cron.d directory
-COPY dbinsertion.cron /etc/cron.d/dbinsertion.cron
+COPY app/dbinsertion.cron /etc/cron.d/dbinsertion.cron
  
 # Give execution rights on the cron job
 RUN chmod 0644 /etc/cron.d/dbinsertion.cron
