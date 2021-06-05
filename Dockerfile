@@ -10,7 +10,7 @@ FROM python:3.8-buster
 RUN apt-get update && apt-get -y install cron wget tar
 
 # Install dependencies for populate database
-RUN python3 -m pip install psycopg2 pandas numpy requests
+RUN python3 -m pip install psycopg2 pandas numpy requests tables
 
 # Creates necessary directories
 RUN mkdir /collect_bus && mkdir /collect_bus_old && mkdir /collect_line && touch /cron.log && touch /collect_bus_old/collection_logs.csv

@@ -26,8 +26,6 @@ def mainBus(args,database,CONFIGS,log):
     log.info(f"Selected mode: bus")
     log.info(f"Inserting data from {desiredDate}")
     log.info(f"Gathering from file")
-
-    _, busTable = ImportBusData.GatherBusData(desiredDate,CONFIGS,logging)
     
     # New partition creation
     with database.cursor() as cursor:
@@ -36,8 +34,9 @@ def mainBus(args,database,CONFIGS,log):
                 bus_data_{desiredDate.year}_{desiredDate.month}_{desiredDate.day} 
             PARTITION OF bus_data 
             FOR VALUES FROM ('{desiredDate.isoformat()}') TO ('{nextDate.isoformat()}')""")
-        cursor.commit()
+        database.commit()
 
+    _, busTable = ImportBusData.GatherBusData(desiredDate,CONFIGS,logging)
 
     log.info("Converting to CSV")
     with io.StringIO() as buffer:
@@ -144,10 +143,14 @@ if __name__ == "__main__":
 
     # Collects compatible variables from environment
     CONFIGS.add_section('database')
-    CONFIGS['database']['user'] = os.getenv("DATABASE_USERNAME")
-    CONFIGS['database']['password'] = os.getenv("DATABASE_PASSWORD")
-    CONFIGS['database']['database'] = os.getenv("DATABASE_NAME")
-    CONFIGS['database']['host'] = os.getenv("DATABASE_HOST")
+    if os.getenv("DATABASE_USERNAME"):
+        CONFIGS['database']['user'] = os.getenv("DATABASE_USERNAME")
+    if os.getenv("DATABASE_PASSWORD"):
+        CONFIGS['database']['password'] = os.getenv("DATABASE_PASSWORD")
+    if os.getenv("DATABASE_NAME"):
+        CONFIGS['database']['database'] = os.getenv("DATABASE_NAME")
+    if os.getenv("DATABASE_HOST"):
+        CONFIGS['database']['host'] = os.getenv("DATABASE_HOST")
 
     # Read configs from main_configurations
     logger.debug(f"Reading configs from {args.config}")
@@ -163,7 +166,7 @@ if __name__ == "__main__":
     # --------------------------------------------------------------------
     logger.info(f"Database connection attempt at '{CONFIGS['database']['database']}':")
     logger.info(f"\tLogin attempt: '{CONFIGS['database']['user']}'@'{CONFIGS['database']['host']}'")
-    logger.info(f"\t{"password set" if CONFIGS.has_option("database","password") else "password NOT set"}")
+    logger.info(f"""\t{"password set" if CONFIGS.has_option("database","password") else "password NOT set"}""")
     
     # Establishing database connection
     database = db.connect(**CONFIGS['database'])
