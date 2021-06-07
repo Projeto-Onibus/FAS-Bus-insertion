@@ -7,7 +7,7 @@
 FROM python:3.8-buster
 
 # programs to 
-RUN apt-get update && apt-get -y install cron wget tar
+RUN apt-get update && apt-get -y install cron wget tar tzdata
 
 # Install dependencies for populate database
 RUN python3 -m pip install psycopg2 pandas numpy requests tables
