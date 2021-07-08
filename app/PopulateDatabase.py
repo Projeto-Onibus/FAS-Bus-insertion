@@ -87,7 +87,7 @@ if __name__ == "__main__":
         'get_lines':mainGetLines
     }
 
-    FilesDir = pathlib.Path("/run/secrets")
+    FilesDir = pathlib.Path("/var/run/secrets")
     DefaultConfigurationsFile = FilesDir/ "main_configurations"
     DatabaseCredentialsFile = FilesDir/ "db_credentials"
     # -------------------------------------------------------------
