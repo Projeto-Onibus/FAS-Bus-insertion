@@ -1,5 +1,6 @@
-#!/bin/sh
-FOLDER='/collect_bus'
+#!/bin/bash
+set -e
+FOLDER='./collect_bus'
 COLLECTED=$FOLDER'/collected_data.txt'
 NOT_COLLECTED=$FOLDER'/not_collected.txt'
 
