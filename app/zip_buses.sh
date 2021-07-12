@@ -16,4 +16,4 @@ RESULTS_NOT_COLLECTED=$(wc -l $NOT_COLLECTED 2>/dev/null || echo 0 0)
 echo $YESTERDAY","${RESULTS_COLLECTED%% *}","${RESULTS_NOT_COLLECTED%% *} >> $OLD_FOLDER'/collection_logs.csv'
 
 # Execute script per-day automaticaly
-python3 /app/PopulateDatabase.py -b $OLD_FOLDER -d $YESTERDAY bus
+python3 /app/PopulateDatabase.py  -d $YESTERDAY bus
