@@ -4,9 +4,9 @@
 # More details at README.md
 # 
 
-FROM python:3.8-buster
+FROM python:3.8-buster as base
 
-# programs to 
+# basic libraries
 RUN apt-get update && apt-get -y install cron wget tar tzdata
 
 # Install dependencies for populate database
@@ -14,6 +14,31 @@ RUN python3 -m pip install psycopg2 pandas numpy requests tables
 
 # Creates necessary directories
 RUN mkdir /collect_bus && mkdir /collect_bus_old && mkdir /collect_line && touch /cron.log && touch /collect_bus_old/collection_logs.csv
+
+
+FROM base as environment 
+
+RUN mkdir /app /tests
+
+VOLUME ["/app", "/tests"]
+
+WORKDIR /tests
+
+ENTRYPOINT ["python3", "send_test_data.py" ]
+
+CMD ["bash"]
+
+FROM base as tests
+
+COPY ./app/ /app/
+
+COPY ./tests/ /tests/
+
+WORKDIR /tests/
+
+CMD ["python3","-m","pytest"]
+
+FROM base as production
 
 # Copy hello-cron file to the cron.d directory
 COPY app/dbinsertion.cron /etc/cron.d/dbinsertion.cron
