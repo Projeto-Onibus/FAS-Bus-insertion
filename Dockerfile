@@ -24,7 +24,6 @@ VOLUME ["/app", "/tests"]
 
 WORKDIR /tests
 
-ENTRYPOINT ["python3", "send_test_data.py" ]
 
 CMD ["bash"]
 

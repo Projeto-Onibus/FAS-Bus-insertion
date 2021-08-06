@@ -68,9 +68,15 @@ def mainLines(args,database,CONFIGS,log):
             for currentPos in list(range(length)):
                 buffer.write(f"""{line},{direction},{currentPos},{lineData.iloc[beginPos+currentPos]['lat']},{lineData.iloc[beginPos+currentPos]['lon']}\n""")
         buffer.seek(0)
-        log.info("Sending to database")
-        with database.cursor() as cursor:
-            cursor.copy_from(buffer,'line_data',sep=',')
+	# defines if save on file or in database
+        if CONFIGS['output']['csv'] == 'true':
+                log.info("Saving to csv file")
+                with open("line_data.csv",'w') as fil:
+                        fil.write(buffer.read())
+        else:
+                log.info("Sending to database")
+                with database.cursor() as cursor:
+                        cursor.copy_from(buffer,'line_data',sep=',')
 
         database.commit()
     log.info("Done")
@@ -101,6 +107,7 @@ if __name__ == "__main__":
     parser.add_argument("-v",'--verbose',action="count",default=0,help="Increase output verbosity")
     parser.add_argument("-b","--bus",default=None,help='bus data insertion path')
     parser.add_argument("-l","--line",default=None,help='bus data insertion path')
+    parser.add_argument("--csv",action='store_true',help="outputs data as csv file instead of sending to database")
     args = parser.parse_args()
 
     # ----------------------------------------
@@ -164,12 +171,17 @@ if __name__ == "__main__":
     # --------------------------------------------------------------------
     # Database connection
     # --------------------------------------------------------------------
-    logger.info(f"Database connection attempt at '{CONFIGS['database']['database']}':")
-    logger.info(f"\tLogin attempt: '{CONFIGS['database']['user']}'@'{CONFIGS['database']['host']}'")
-    logger.info(f"""\t{"password set" if CONFIGS.has_option("database","password") else "password NOT set"}""")
-    
+    #logger.info(f"Database connection attempt at '{CONFIGS['database']['database']}':")
+    #logger.info(f"\tLogin attempt: '{CONFIGS['database']['user']}'@'{CONFIGS['database']['host']}'")
+    #logger.info(f"""\t{"password set" if CONFIGS.has_option("database","password") else "password NOT set"}""")
+    CONFIGS.add_section('output') 
+    CONFIGS['output']['csv'] = 'true' if args.csv else 'false'
+
     # Establishing database connection
-    database = db.connect(**CONFIGS['database'])
+    if args.mode == 'get_lines':
+	    database = None
+    else:
+            database = db.connect(**CONFIGS['database'])
 
     logger.info("Connection successful.")
     logger.info(f"Selected mode: {args.mode}")
