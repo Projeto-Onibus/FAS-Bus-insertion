@@ -27,16 +27,24 @@ def mainBus(args,database,CONFIGS,log):
     log.info(f"Inserting data from {desiredDate}")
     log.info(f"Gathering from file")
     
-    # New partition creation
-    with database.cursor() as cursor:
-        cursor.execute(f"""
-            CREATE TABLE IF NOT EXISTS 
-                bus_data_{desiredDate.year}_{desiredDate.month}_{desiredDate.day} 
-            PARTITION OF bus_data 
-            FOR VALUES FROM ('{desiredDate.isoformat()}') TO ('{nextDate.isoformat()}')""")
-        database.commit()
-
     _, busTable = ImportBusData.GatherBusData(desiredDate,CONFIGS,logging)
+   
+    cleanDates = set() 
+    for numpyDates in busTable.time.unique():	
+        lowerLimit = datetime.datetime.utcfromtimestamp(numpyDates.tolist()/1e9)
+        upperLimit = lowerLimit + datetime.timedelta(days=1)
+        cleanDates.add((lowerLimit.date(),upperLimit.date()))
+
+    for lowerLimit, upperLimit in cleanDates:
+		# New partition creation
+        log.debug(f"Creating partitions for dates in range {lowerLimit} to {upperLimit}")
+        with database.cursor() as cursor:
+            cursor.execute(f"""
+				CREATE TABLE IF NOT EXISTS 
+					bus_data_{lowerLimit.year}_{lowerLimit.month}_{lowerLimit.day} 
+				PARTITION OF bus_data 
+				FOR VALUES FROM ('{lowerLimit.isoformat()}') TO ('{upperLimit.isoformat()}')""")
+            database.commit()
 
     log.info("Converting to CSV")
     with io.StringIO() as buffer:
@@ -179,9 +187,9 @@ if __name__ == "__main__":
 
     # Establishing database connection
     if args.mode == 'get_lines':
-	    database = None
+         database = None
     else:
-            database = db.connect(**CONFIGS['database'])
+         database = db.connect(**CONFIGS['database'])
 
     logger.info("Connection successful.")
     logger.info(f"Selected mode: {args.mode}")
