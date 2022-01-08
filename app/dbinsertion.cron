@@ -1,3 +1,0 @@
-* * * * * /app/gather.sh >> /dev/null &2>1
-0 0 * * *  /app/zip_buses.sh >> /dev/null &2>1
-# new line

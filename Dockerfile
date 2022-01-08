@@ -7,53 +7,16 @@
 FROM python:3.8-buster as base
 
 # basic libraries
-RUN apt-get update && apt-get -y install cron wget tar tzdata
+RUN apt-get update && apt-get -y install wget tzdata git
 
 # Install dependencies for populate database
-RUN python3 -m pip install psycopg2 pandas numpy requests tables
+RUN python3 -m pip install psycopg2 requests schedule
 
-# Creates necessary directories
-RUN mkdir /collect_bus && mkdir /collect_bus_old && mkdir /collect_line && touch /cron.log && touch /collect_bus_old/collection_logs.csv
-
-
-FROM base as environment 
-
-RUN mkdir /app /tests
-
-VOLUME ["/app", "/tests"]
-
-WORKDIR /tests
-
-
-CMD ["bash"]
-
-FROM base as tests
-
-COPY ./app/ /app/
-
-COPY ./tests/ /tests/
-
-WORKDIR /tests/
-
-CMD ["python3","-m","pytest"]
-
-FROM base as production
-
-# Copy hello-cron file to the cron.d directory
-COPY app/dbinsertion.cron /etc/cron.d/dbinsertion.cron
- 
-# Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/dbinsertion.cron
-
-# Apply cron job
-RUN crontab /etc/cron.d/dbinsertion.cron
-
-# Move app to container
-COPY ./app/* /app/
+# Clones repo
+RUN mkdir /app
 
 WORKDIR /app
 
-RUN chmod +x *.sh
+RUN git clone https://github.com/Projeto-Onibus/FAS.git
 
-# Run the command on container startup
-CMD cron -f
+CMD ["python3","-m","FAS.insertion.Inserter","--database-credentials","/run/secrets/credentials.env","-r"]
