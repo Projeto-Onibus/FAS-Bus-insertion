@@ -19,4 +19,5 @@ WORKDIR /app
 
 RUN git clone https://github.com/Projeto-Onibus/FAS.git
 
+
 CMD ["python3","-m","FAS.insertion.Inserter","--database-credentials","/run/secrets/credentials.env","-r"]
